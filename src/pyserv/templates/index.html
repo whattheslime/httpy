@@ -1,0 +1,294 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Directory listing for {{ request.path }}</title>
+    <style>
+      body {
+        font-family: Garamond, serif;
+        color: #34495e;
+      }
+      
+      button {
+        min-width: 9em;
+        padding: .3em 3em;
+        height: 2em;
+        border: none;
+        border-radius: 1em;
+        color: white;
+        cursor: pointer;
+        font-family: Garamond, serif;
+        font-weight: bold;
+      }
+      
+      a {
+        color: #3498db;
+      }
+      
+      th, td {
+        padding-right: 3em;
+      }
+      
+      hr {
+        border: white solid 1px;
+        border-top: #95a5a6 solid 1px;
+      }
+      
+      input[type=text], textarea, select {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      
+      .btn-group {
+        display: flex;
+        flex-direction: row-reverse;
+      }
+      
+      /* The add Button */
+      .success {
+        background-color: #2ecc71;
+      }
+      .success:hover {
+        background-color: #27ae60;
+      }
+      
+      /* The Delete Button */
+      .danger {
+        background-color: #e74c3c;
+      }
+      .danger:hover {
+        background-color:#c0392b;
+      }
+      
+      .primary {
+        background-color: #3498db;
+      }
+      
+      .primary:hover {
+        background-color: #2980b9;
+      }
+
+      .warning {
+        background-color: #f1c40f;
+      }
+      
+      .warning:hover {
+        background-color: #f39c12;
+      }
+
+      .flash {
+        border: 1px solid #95a5a6;
+        border-radius: 5em;
+        padding: .5em 1em;
+        cursor: pointer;
+      }
+
+      .flash:hover {
+        background-color: #ecf0f1;
+      }
+      
+      .flash-success {
+        border: 1px solid #2ecc71;
+        color: #2ecc71;
+      }
+
+      .flash-danger {
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+      }
+
+      .flash-warning {
+        border: 1px solid #f1c40f;
+        color: #f1c40f;
+      }
+
+      /* The Close Button */
+      .close {
+        background-color: #ecf0f1;
+        color: #95a5a6;
+      }
+      
+      .close:hover, .close:focus {
+        background-color: #bdc3c7;
+        color: #7f8c8d;
+      }
+      
+      /* The Modal (background) */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 8em; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+      
+      /* Modal Content */
+      .modal-content {
+        border: none;
+        border-radius: 1em;
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        max-width: 60%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div onclick=this.remove() class="flash flash-{{ category }}"><strong>{{ category.title() }}:</strong> {{ message }}!</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <h1>Directory listing for {{ request.path }}</h1>
+    <div>
+      <button class="modal-button success" href="#createModal">Create file</button>
+      <button class="modal-button success" href="#mkdirModal">Create directory</button>
+      <button class="modal-button primary" href="#uploadModal">Upload file</button>
+    </div>
+    <hr/>
+    <form action="{{ url_for("index", req_path=(request.path)) }}?action=delete" method=post>
+      <table>
+        <caption></caption>
+        <tr>
+            <th>Path</th>
+            <th>Last modified</th>
+            <th>Size</th>
+        </tr>
+          <td><a href="{{ url_for("index", req_path=(request.path)) }}../">[Parent Directory]</a></td>
+          <td style="text-align: right;">-</td>
+          <td style="text-align: right;">-</td>
+        <tr>
+        </tr>
+        {% for file in files %}
+          <tr>
+            <td>
+              <input type="checkbox" name="file{{ loop.index0 }}" value="{{ file[0] }}">
+              <a href="{{ url_for("index", req_path=(request.path + file[0])) }}">{{ file[0] }}</a>
+            </td>
+            <td style="text-align: right;">{{ file[1] }}</td>
+            <td style="text-align: right;">{{ file[2]}}K</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br>
+      
+      <button class="modal-button danger" href="#deleteModal">Delete selected files</button>
+      
+      <div id="deleteModal" class="modal">
+        <div class="modal-content">
+          <h3>Delete files</h3><hr>
+            <p>Do yo really want to delete the selected files ?<p>
+            <div class="btn-group">
+              <button class=close type=button>Cancel</button>
+              <button class=danger type=submit>Delete</button>
+            </div>
+        </div>
+      </div>
+
+    </form>
+    <hr/>
+
+    <div id="createModal" class="modal">
+      <div class="modal-content">
+
+        <h3>Create file</h3><hr>
+        <form action="{{ url_for("index", req_path=(request.path)) }}?action=create" method=post>
+          <label>File name:<label>
+          <input type=text name=name value="{{uuid}}.txt" required>
+          <br>
+          <label>File content:<label>
+          <textarea name=content rows=5 required></textarea>
+          <br>
+          <div class="btn-group">
+            <button class=close type=button>Cancel</button>
+            <button class=success type=submit>Create</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Make directory modal -->
+    <div id="mkdirModal" class="modal">
+      <div class="modal-content">
+        <h3>Create directory</h3><hr>
+        <br>
+        <form action="{{ url_for("index", req_path=(request.path)) }}?action=mkdir" method=post>
+          <label>Directory name:<label>
+          <input type=text name=name required>
+          <div class="btn-group">
+            <button class=close type=button>Cancel</button>
+            <button class=success type=submit>Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Upload modal -->
+    <div id="uploadModal" class="modal">
+      <div class="modal-content">
+        <h3>Upload file</h3><hr>
+        <br>
+        <form action="{{ url_for("index", req_path=(request.path)) }}?action=upload" method=post enctype=multipart/form-data>
+          <input type=file name=file required>
+          <div class="btn-group">
+            <button class=close type=button>Cancel</button>
+            <button class=success type=submit>Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      // Get the button that opens the modal
+      var btn = document.querySelectorAll("button.modal-button");
+
+      // All page modals
+      var modals = document.querySelectorAll('.modal');
+
+      // Get the <span> element that closes the modal
+      var spans = document.getElementsByClassName("close");
+
+      // When the user clicks the button, open the modal
+      for (var i = 0; i < btn.length; i++) {
+      btn[i].onclick = function(e) {
+          e.preventDefault();
+          modal = document.querySelector(e.target.getAttribute("href"));
+          modal.style.display = "block";
+      }
+      }
+
+      // When the user clicks on <span> (x), close the modal
+      for (var i = 0; i < spans.length; i++) {
+      spans[i].onclick = function() {
+          for (var index in modals) {
+            if (typeof modals[index].style !== 'undefined') modals[index].style.display = "none";    
+          }
+      }
+      }
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+          if (event.target.classList.contains('modal')) {
+          for (var index in modals) {
+            if (typeof modals[index].style !== 'undefined') modals[index].style.display = "none";    
+          }
+          }
+      }
+    </script>
+  </body>
+</html>
