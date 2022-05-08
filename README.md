@@ -1,5 +1,5 @@
-PyShare
-=======
+Pyserv
+======
 
 Simple HTTP server to list and manipulate files.
 
