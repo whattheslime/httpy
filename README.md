@@ -1,4 +1,4 @@
-Pyserv
+PyServ
 ======
 
 Simple HTTP server to list and manipulate files.
