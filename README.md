@@ -37,25 +37,15 @@ options:
   -h, --help            show this help message and exit
   -a LOGIN PASSWORD, --auth LOGIN PASSWORD
                         setup a basic authentication
-  -b BIND, --bind BIND  specify alternate bind address [default: all interfaces](default: 0.0.0.0)
+  -b BIND, --bind BIND  specify alternate bind address [default: all interfaces]
   -d DIRECTORY, --directory DIRECTORY
-                        working directory [default: current directory]
+                        specify alternate working directory [default: current directory]
   --debug               enable flask debug mode
-  -p PORT, --port PORT  server port [default: 8000]
+  -p PORT, --port PORT  specify alternate port [default: 8000]
   --ssl                 enable SSL encryption
-  --ssl-cert SSL_CERT   SSL server certificate path
-  --ssl-key SSL_KEY     SSL server secret key path
+  --ssl-cert SSL_CERT   specify SSL server certificate
+  --ssl-key SSL_KEY     specify SSL server secret key path
 
-```
-
-Start with https:
-```bash
- $ pyserv --ssl
-```
-
-Start with basic auth
-```bash
- $ pyserv --auth
 ```
 
 Generate SSL certificates

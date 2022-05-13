@@ -187,9 +187,11 @@ def get_args():
 	parser.add_argument(
 		"--ssl", action="store_true", help="enable SSL encryption")
 	parser.add_argument(
-		"--ssl-cert", type=Path, default=None, help="SSL server certificate")
+		"--ssl-cert", type=Path, default=None, 
+		help="specifySSL server certificate")
 	parser.add_argument(
-		"--ssl-key", type=Path, default=None, help="SSL server secret key path")
+		"--ssl-key", type=Path, default=None, 
+		help="specifySSL server secret key path")
 	return parser
 
 
