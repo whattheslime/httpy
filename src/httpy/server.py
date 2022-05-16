@@ -182,8 +182,6 @@ def get_args():
 		"-d", "--directory", type=Path, default=Path(os.path.curdir).absolute(),
 		help="specify alternate working directory [default: current directory]")
 	parser.add_argument(
-		"--debug", action="store_true", help="enable flask debug mode")
-	parser.add_argument(
 		"-p", "--port", type=int, default=8000,
 		help="specify alternate port [default: 8000]")
 	parser.add_argument(
@@ -194,6 +192,8 @@ def get_args():
 	parser.add_argument(
 		"--key", "--ssl-key", type=Path, default=None, 
 		help="specifySSL server secret key path")
+	parser.add_argument(
+		"--debug", action="store_true", help="enable flask debug mode")
 	return parser
 
 
@@ -222,15 +222,15 @@ def run():
 	ssl_context = None
 	if args.ssl:
 		# need both or no of the two arguments
-		if bool(args.ssl_cert) ^ bool(args.ssl_key):
+		if bool(args.cert) ^ bool(args.key):
 			parser.error(
-				"You need to define both of --ssl-cert and --ssl-key")
+				"You need to define both of --cert and --key")
 		# generate self-signed certificate
-		if not (args.ssl_cert or args.ssl_key):
+		if not (args.cert or args.key):
 			ssl_context = "adhoc"
 		# load SSL certificate and key from user arguments
 		else:
-			ssl_context = (args.ssl_cert, args.ssl_key)
+			ssl_context = (args.cert, args.key)
 
 	# run the server
 	app.run(

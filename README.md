@@ -1,5 +1,5 @@
-PyServ
-======
+HTTPy
+=====
 
 Simple HTTP server to list and manipulate files.
 
@@ -11,9 +11,9 @@ The objective of this project is to replace the SimpleHTTPServer with a server o
 - Files and directories creation
 - Files and directories deletion
 
-![alt text](images/command.png)
+![alt text](images/cmd.png)
 
-![alt text](images/server.png)
+![alt text](images/srv.png)
 
 Installation
 ------------
@@ -27,9 +27,9 @@ Run the server
 ----------------
 
 ```bash
- $ pyserv -h                
-usage: pyserv [-h] [-a LOGIN PASSWORD] [-b BIND] [-d DIRECTORY] [--debug] [-p PORT] [--ssl]
-              [--ssl-cert SSL_CERT] [--ssl-key SSL_KEY]
+ $ httpy -h
+usage: httpy [-h] [-a LOGIN PASSWORD] [-b BIND] [-d DIRECTORY] [-p PORT] [--ssl] [--cert CERT]
+             [--key KEY] [--debug]
 
 Simple HTTP server to list and manipulate files
 
@@ -40,12 +40,13 @@ options:
   -b BIND, --bind BIND  specify alternate bind address [default: all interfaces]
   -d DIRECTORY, --directory DIRECTORY
                         specify alternate working directory [default: current directory]
-  --debug               enable flask debug mode
   -p PORT, --port PORT  specify alternate port [default: 8000]
   --ssl                 enable SSL encryption
-  --ssl-cert SSL_CERT   specify SSL server certificate
-  --ssl-key SSL_KEY     specify SSL server secret key path
-
+  --cert CERT, --ssl-cert CERT
+                        specifySSL server certificate
+  --key KEY, --ssl-key KEY
+                        specifySSL server secret key path
+  --debug               enable flask debug mode
 ```
 
 Generate SSL certificates
@@ -53,5 +54,5 @@ Generate SSL certificates
 
 ```bash
 $ openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365
-$ pyserv --ssl --ssl-cert cert.pem --ssl-key key.pem 
+$ httpy --ssl --cert cert.pem --key key.pem 
 ```
