@@ -32,7 +32,7 @@ def verify_password(username, password):
 @app.route("/<path:req_path>", methods=["GET", "POST"])
 @auth.login_required
 def index(req_path):
-	"""Directory listing page serve by the flask server
+	"""Directory listing page served by the flask server.
 	
 	By accessing with a GET request, it return a directory listing from the 
 	current directory.
@@ -41,10 +41,10 @@ def index(req_path):
 	the "action" get parameter.
 	
 	Allowed actions are:
-	- create a file
-	- create a directory
-	- upload a file
- 	- delete a files or a drectories
+	- create: create a file
+	- mkdir: create a directory
+	- upload: upload a file
+ 	- delete: delete a files or a drectories
 	"""
 	actions = ["mkdir", "create", "delete", "upload"]
 	
@@ -70,18 +70,20 @@ def index(req_path):
 		return render_template("index.html", files=files, uuid=uuid4())
 
 	if request.method == "POST":
+		# get the action
 		action = request.args.get("action")
+		# check if action is valid
 		if action not in actions:
 			flash("Invalid action")
 			return redirect(request.url)
-		
+		# execute action
 		if action in actions:
 			func = globals()[action]
 			return func(req_path, request)
 
 
 def make_file_path(path, file_name):
-	"""Create and return secure Path object from requested one
+	"""Action that create and return secure Path object from requested one
 	"""
 	secure_file_name = secure_filename(file_name)
 	return Path(
@@ -89,7 +91,7 @@ def make_file_path(path, file_name):
 
 
 def create(path, request):
-	"""Create file
+	"""Action that create file
 	"""
 	if "name" not in request.form:
 		flash("No file name provided")
@@ -100,34 +102,34 @@ def create(path, request):
 		if not os.path.exists(file_path):
 			with open(file_path, "w") as file:
 				file.write(request.form["content"])
-			flash(f"File {request.form['name']} created", "success")	
+			flash(f"File {request.form['name']} created", "green")	
 		else:
-			flash(f"File {request.form['name']} already exists", "warning")
+			flash(f"File {request.form['name']} already exists", "yellow")
 		
 	return redirect(request.url)
 
 
 def mkdir(path, request):
-	"""Create directory 
+	"""Action that create directory 
 	"""
 	if "name" not in request.form:
-		flash("No directory name provided", "danger")
+		flash("No directory name provided", "red")
 	else:
 		dir_path = make_file_path(path, request.form["name"])
 		if not os.path.exists(dir_path):
 			os.mkdir(dir_path)
-			flash(f"Dirctory {path} created", "success")	
+			flash(f"Dirctory {path} created", "green")	
 		else:
-			flash(f"Directory {path} already exists", "warning")
+			flash(f"Directory {path} already exists", "yellow")
 	return redirect(request.url)
 
 
 def delete(path, request):
-	"""Delete file or folder if exists 
+	"""Action that delete file or directory if exists
 	"""
 	files = list(request.form.values())
 	if not files:
-		flash("No files selected", "danger")
+		flash("No files selected", "red")
 	for file_name in files:
 		file_path = make_file_path(path, file_name)
 		if file_path.exists():
@@ -136,32 +138,32 @@ def delete(path, request):
 			if file_path.is_dir():
 				rmtree(file_path)
 		else:
-			flash(f"File {file_name} does not exists", "warning")
+			flash(f"File {file_name} does not exists", "yellow")
 	if files:
-		flash("Files deleted", "success")
+		flash("Files deleted", "green")
 	return redirect(request.url)
 
 
 def upload(path, request):
-	"""Upload file directory 
+	"""Action that upload file
 	"""
 	# check if the post request has the file part
 	if "file" not in request.files:
-		flash("No file part provided", "danger")
+		flash("No file part provided", "red")
 		return redirect(request.url)
 	file = request.files["file"]
-	# If the user does not select a file, the browser submits an
+	# if the user does not select a file, the browser submits an
 	# empty file without a filename.
 	if file.filename == "":
-		flash("No file selected", "danger")
+		flash("No file selected", "red")
 		return redirect(request.url)
 	
 	if file:
 		file_path = make_file_path(path, file.filename)
 		if file_path.exists():
-			flash(f"File {file.filename} will be erased", "warning")
+			flash(f"File {file.filename} will be erased", "yellow")
 		file.save(file_path)
-		flash(f"File {file.filename} uploaded", "success")
+		flash(f"File {file.filename} uploaded", "green")
 		return redirect(request.url)
 
 
@@ -187,15 +189,17 @@ def get_args():
 	parser.add_argument(
 		"--ssl", action="store_true", help="enable SSL encryption")
 	parser.add_argument(
-		"--ssl-cert", type=Path, default=None, 
+		"--cert", "--ssl-cert", type=Path, default=None, 
 		help="specifySSL server certificate")
 	parser.add_argument(
-		"--ssl-key", type=Path, default=None, 
+		"--key", "--ssl-key", type=Path, default=None, 
 		help="specifySSL server secret key path")
 	return parser
 
 
 def run():
+	"""Main function
+	"""
 	# generate app secret
 	app.secret_key = "".join(
 		secrets.choice(string.printable) for _ in range(20))
@@ -232,3 +236,4 @@ def run():
 	app.run(
 		host=args.bind, port=args.port, debug=args.debug,
 		ssl_context=ssl_context)
+

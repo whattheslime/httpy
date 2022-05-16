@@ -49,35 +49,42 @@
         flex-direction: row-reverse;
       }
       
-      /* The add Button */
-      .success {
+      .turquoise {
+        background-color: #1abc9c;
+      }
+      
+      .turquoise:hover {
+        background-color: #16a085;
+      }
+
+      .green {
         background-color: #2ecc71;
       }
-      .success:hover {
+      .green:hover {
         background-color: #27ae60;
       }
       
       /* The Delete Button */
-      .danger {
+      .red {
         background-color: #e74c3c;
       }
-      .danger:hover {
+      .red:hover {
         background-color:#c0392b;
       }
       
-      .primary {
+      .blue {
         background-color: #3498db;
       }
       
-      .primary:hover {
+      .blue:hover {
         background-color: #2980b9;
       }
 
-      .warning {
+      .yellow {
         background-color: #f1c40f;
       }
       
-      .warning:hover {
+      .yellow:hover {
         background-color: #f39c12;
       }
 
@@ -92,17 +99,17 @@
         background-color: #ecf0f1;
       }
       
-      .flash-success {
+      .flash-green {
         border: 1px solid #2ecc71;
         color: #2ecc71;
       }
 
-      .flash-danger {
+      .flash-red {
         border: 1px solid #e74c3c;
         color: #e74c3c;
       }
 
-      .flash-warning {
+      .flash-yellow {
         border: 1px solid #f1c40f;
         color: #f1c40f;
       }
@@ -155,9 +162,9 @@
     {% endwith %}
     <h1>Directory listing for {{ request.path }}</h1>
     <div>
-      <button class="modal-button success" href="#createModal">Create file</button>
-      <button class="modal-button success" href="#mkdirModal">Create directory</button>
-      <button class="modal-button primary" href="#uploadModal">Upload file</button>
+      <button class="modal-button green" href="#createModal">Create file</button>
+      <button class="modal-button turquoise" href="#mkdirModal">Create directory</button>
+      <button class="modal-button blue" href="#uploadModal">Upload file</button>
     </div>
     <hr/>
     <form action="{{ url_for("index", req_path=(request.path)) }}?action=delete" method=post>
@@ -186,7 +193,7 @@
       </table>
       <br>
       
-      <button class="modal-button danger" href="#deleteModal">Delete selected files</button>
+      <button class="modal-button red" href="#deleteModal">Delete selected files</button>
       
       <div id="deleteModal" class="modal">
         <div class="modal-content">
@@ -194,7 +201,7 @@
             <p>Do yo really want to delete the selected files ?<p>
             <div class="btn-group">
               <button class=close type=button>Cancel</button>
-              <button class=danger type=submit>Delete</button>
+              <button class=red type=submit>Delete</button>
             </div>
         </div>
       </div>
@@ -215,7 +222,7 @@
           <br>
           <div class="btn-group">
             <button class=close type=button>Cancel</button>
-            <button class=success type=submit>Create</button>
+            <button class=green type=submit>Create</button>
           </div>
         </form>
 
@@ -232,7 +239,7 @@
           <input type=text name=name required>
           <div class="btn-group">
             <button class=close type=button>Cancel</button>
-            <button class=success type=submit>Create</button>
+            <button class=green type=submit>Create</button>
           </div>
         </form>
       </div>
@@ -247,7 +254,7 @@
           <input type=file name=file required>
           <div class="btn-group">
             <button class=close type=button>Cancel</button>
-            <button class=success type=submit>Upload</button>
+            <button class=green type=submit>Upload</button>
           </div>
         </form>
       </div>
