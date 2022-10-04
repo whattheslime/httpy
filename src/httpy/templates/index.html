@@ -161,11 +161,13 @@
       {% endif %}
     {% endwith %}
     <h1>Directory listing for {{ request.path }}</h1>
+    {% if edit %}
     <div>
       <button class="modal-button green" href="#createModal">Create file</button>
       <button class="modal-button turquoise" href="#mkdirModal">Create directory</button>
       <button class="modal-button blue" href="#uploadModal">Upload file</button>
     </div>
+    {% endif %}
     <hr/>
     <form action="{{ url_for("index", req_path=(request.path)) }}?action=delete" method=post>
       <table>
@@ -192,9 +194,9 @@
         {% endfor %}
       </table>
       <br>
-      
+      {% if edit %}
       <button class="modal-button red" href="#deleteModal">Delete selected files</button>
-      
+      {% endif %}
       <div id="deleteModal" class="modal">
         <div class="modal-content">
           <h3>Delete files</h3><hr>
