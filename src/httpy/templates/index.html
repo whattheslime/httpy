@@ -4,14 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Directory listing for {{ request.path }}</title>
     <style>
+      /* generic styles */
       body {
         font-family: Garamond, serif;
         color: #34495e;
       }
-      
       button {
         min-width: 9em;
-        padding: .3em 3em;
+        padding: .1em 1em;
         height: 2em;
         border: none;
         border-radius: 1em;
@@ -20,20 +20,16 @@
         font-family: Garamond, serif;
         font-weight: bold;
       }
-      
       a {
         color: #3498db;
       }
-      
       th, td {
-        padding-right: 3em;
+        padding-right: 2em;
       }
-      
       hr {
         border: white solid 1px;
         border-top: #95a5a6 solid 1px;
       }
-      
       input[type=text], textarea, select {
         width: 100%;
         padding: 12px 20px;
@@ -42,90 +38,86 @@
         border: 1px solid #ccc;
         border-radius: 4px;
         box-sizing: border-box;
-      }
-      
+      }      
+
+      /* button group */
       .btn-group {
         display: flex;
         flex-direction: row-reverse;
       }
       
-      .turquoise {
-        background-color: #1abc9c;
-      }
-      
-      .turquoise:hover {
-        background-color: #16a085;
-      }
-
-      .green {
-        background-color: #2ecc71;
-      }
-      .green:hover {
-        background-color: #27ae60;
-      }
-      
-      /* The Delete Button */
-      .red {
-        background-color: #e74c3c;
-      }
-      .red:hover {
-        background-color:#c0392b;
-      }
-      
-      .blue {
-        background-color: #3498db;
-      }
-      
-      .blue:hover {
-        background-color: #2980b9;
-      }
-
-      .yellow {
-        background-color: #f1c40f;
-      }
-      
-      .yellow:hover {
-        background-color: #f39c12;
-      }
-
+      /* flash */
       .flash {
         border: 1px solid #95a5a6;
         border-radius: 5em;
         padding: .5em 1em;
         cursor: pointer;
       }
-
       .flash:hover {
         background-color: #ecf0f1;
       }
-      
+
+      /* turquoise colors */
+      .turquoise {
+        background-color: #1abc9c;
+      }
+      .turquoise:hover {
+        background-color: #16a085;
+      }
+
+      /* green colors */
+      .green {
+        background-color: #2ecc71;
+      }
+      .green:hover {
+        background-color: #27ae60;
+      }
       .flash-green {
         border: 1px solid #2ecc71;
         color: #2ecc71;
       }
 
+      /* red colors */
+      .red {
+        background-color: #e74c3c;
+      }
+      .red:hover {
+        background-color:#c0392b;
+      }
       .flash-red {
         border: 1px solid #e74c3c;
         color: #e74c3c;
       }
 
+      /* blue colors */
+      .blue {
+        background-color: #3498db;
+      }
+      .blue:hover {
+        background-color: #2980b9;
+      }
+
+      /* yellow colors */
+      .yellow {
+        background-color: #f1c40f;
+      }
+      .yellow:hover {
+        background-color: #f39c12;
+      }
       .flash-yellow {
         border: 1px solid #f1c40f;
         color: #f1c40f;
       }
 
-      /* The Close Button */
-      .close {
-        background-color: #ecf0f1;
-        color: #95a5a6;
+      /* close Button */
+      .gray {
+        background-color: rgb(182, 197, 201);
+      }
+      .gray:hover, .gray:focus {
+        background-color: #95a5a6;
       }
       
-      .close:hover, .close:focus {
-        background-color: #bdc3c7;
-        color: #7f8c8d;
-      }
-      
-      /* The Modal (background) */
+      /* modal background */
       .modal {
         display: none; /* Hidden by default */
         position: fixed; /* Stay in place */
@@ -140,7 +132,7 @@
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
       }
       
-      /* Modal Content */
+      /* modal content */
       .modal-content {
         border: none;
         border-radius: 1em;
@@ -161,13 +153,17 @@
       {% endif %}
     {% endwith %}
     <h1>Directory listing for {{ request.path }}</h1>
-    {% if edit %}
     <div>
-      <button class="modal-button green" href="#createModal">Create file</button>
-      <button class="modal-button turquoise" href="#mkdirModal">Create directory</button>
-      <button class="modal-button blue" href="#uploadModal">Upload file</button>
+      <form action="{{ url_for("index", req_path=(request.path)) }}?action=archive" method=post>
+        {% if edit %}
+          <button type="button" class="modal-button green" href="#createModal">Create file</button>
+          <button type="button" class="modal-button turquoise" href="#mkdirModal">Create directory</button>
+          <button type="button" class="modal-button blue" href="#uploadModal">Upload files</button>
+        {% endif %}
+        <button type=submit class="yellow">Download archive</button>
+        <button type="button" class="modal-button gray" href="#helpModal">Curl commands</button>
+      </form>
     </div>
-    {% endif %}
     <hr/>
     <form action="{{ url_for("index", req_path=(request.path)) }}?action=delete" method=post>
       <table>
@@ -177,43 +173,84 @@
             <th>Last modified</th>
             <th>Size</th>
         </tr>
+        <tr>
           <td><a href="{{ url_for("index", req_path=(request.path)) }}../">[Parent Directory]</a></td>
           <td style="text-align: right;">-</td>
           <td style="text-align: right;">-</td>
-        <tr>
         </tr>
         {% for file in files %}
           <tr>
             <td>
-              <input type="checkbox" name="file{{ loop.index0 }}" value="{{ file[0] }}">
+              {% if edit %}
+                <input type="checkbox" name="file{{ loop.index0 }}" value="{{ file[0] }}">
+              {% endif %}
               <a href="{{ url_for("index", req_path=(request.path + file[0])) }}">{{ file[0] }}</a>
             </td>
             <td style="text-align: right;">{{ file[1] }}</td>
-            <td style="text-align: right;">{{ file[2]}}K</td>
+            <td style="text-align: right;">{{ file[2] }}K</td>
           </tr>
         {% endfor %}
       </table>
       <br>
       {% if edit %}
       <button class="modal-button red" href="#deleteModal">Delete selected files</button>
-      {% endif %}
+      <!-- Delete files modal -->
       <div id="deleteModal" class="modal">
         <div class="modal-content">
           <h3>Delete files</h3><hr>
             <p>Do yo really want to delete the selected files ?<p>
             <div class="btn-group">
-              <button class=close type=button>Cancel</button>
+              <button class="close gray" type=button>Cancel</button>
               <button class=red type=submit>Delete</button>
             </div>
         </div>
       </div>
-
+      {% endif %}
     </form>
     <hr/>
 
+    <!-- Help modal -->
+    <div id="helpModal" class="modal">
+      <div class="modal-content">
+        <h3>Curl Commands</h3><hr>
+        <table>
+          <tr>
+            <td style="padding-right: 30px;">Download a file:</td>
+            <td>curl -ski -O {{ request.base_url }}file.ext</td>
+          </tr>
+          <tr>
+            <td>Download archive of directory:</td>
+            <td>curl -ski -d '' {{ request.base_url }}?action=archive -o archive.zip</td>
+          </tr>
+          {% if edit %}
+          <tr>
+            <td>Create a file:</td>
+            <td>curl -ski {{ request.base_url }}?action=create -d 'name=filename&content=filecontent'</td>
+          </tr>
+          <tr>
+            <td>Create a directory:</td>
+            <td>curl -ski {{ request.base_url }}?action=mkdir -d name='dirname'</td>
+          </tr>
+          <tr>
+            <td>Upload files:</td>
+            <td>curl -ski {{ request.base_url }}?action=upload -F file=@'path/to/file1.ext' -F file=@'path/to/file2.ext'</td>
+          </tr>
+          <tr>
+            <td>Delete files.</td>
+            <td>curl -ski {{ request.base_url }}?action=delete -d 'file1='filename1&file2=filename2'</td>
+          </tr>
+          {% endif %}
+        </table>
+        <br>
+          <div class="btn-group">
+            <button class="close gray" type=button>Close</button>
+          </div>
+      </div>
+    </div>
+
+    <!-- Create file modal -->
     <div id="createModal" class="modal">
       <div class="modal-content">
-
         <h3>Create file</h3><hr>
         <form action="{{ url_for("index", req_path=(request.path)) }}?action=create" method=post>
           <label>File name:<label>
@@ -223,11 +260,10 @@
           <textarea name=content rows=5 required></textarea>
           <br>
           <div class="btn-group">
-            <button class=close type=button>Cancel</button>
+            <button class="close gray" type=button>Cancel</button>
             <button class=green type=submit>Create</button>
           </div>
         </form>
-
       </div>
     </div>
 
@@ -240,7 +276,7 @@
           <label>Directory name:<label>
           <input type=text name=name required>
           <div class="btn-group">
-            <button class=close type=button>Cancel</button>
+            <button class="close gray" type=button>Cancel</button>
             <button class=green type=submit>Create</button>
           </div>
         </form>
@@ -253,9 +289,9 @@
         <h3>Upload file</h3><hr>
         <br>
         <form action="{{ url_for("index", req_path=(request.path)) }}?action=upload" method=post enctype=multipart/form-data>
-          <input type=file name=file required>
+          <input type=file name=file multiple required>
           <div class="btn-group">
-            <button class=close type=button>Cancel</button>
+            <button class="close gray" type=button>Cancel</button>
             <button class=green type=submit>Upload</button>
           </div>
         </form>
@@ -264,38 +300,33 @@
 
     <script type="text/javascript">
       // Get the button that opens the modal
-      var btn = document.querySelectorAll("button.modal-button");
-
+      var buttons = document.querySelectorAll("button.modal-button");
       // All page modals
       var modals = document.querySelectorAll('.modal');
-
       // Get the <span> element that closes the modal
       var spans = document.getElementsByClassName("close");
-
       // When the user clicks the button, open the modal
-      for (var i = 0; i < btn.length; i++) {
-      btn[i].onclick = function(e) {
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].onclick = function(e) {
           e.preventDefault();
           modal = document.querySelector(e.target.getAttribute("href"));
           modal.style.display = "block";
+        }
       }
-      }
-
       // When the user clicks on <span> (x), close the modal
       for (var i = 0; i < spans.length; i++) {
-      spans[i].onclick = function() {
+        spans[i].onclick = function() {
           for (var index in modals) {
             if (typeof modals[index].style !== 'undefined') modals[index].style.display = "none";    
           }
+        }
       }
-      }
-
       // When the user clicks anywhere outside of the modal, close it
       window.onclick = function(event) {
           if (event.target.classList.contains('modal')) {
-          for (var index in modals) {
-            if (typeof modals[index].style !== 'undefined') modals[index].style.display = "none";    
-          }
+            for (var index in modals) {
+              if (typeof modals[index].style !== 'undefined') modals[index].style.display = "none";    
+            }
           }
       }
     </script>

@@ -6,13 +6,14 @@ import string
 from argparse import ArgumentParser
 from hashlib import sha256
 from pathlib import Path
-from shutil import rmtree
+from shutil import rmtree, make_archive
 from time import ctime
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 from flask import (
     abort, Flask, flash, redirect, request,	render_template, 
-    send_from_directory)
+    send_from_directory, send_file)
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.utils import secure_filename
 
@@ -41,24 +42,25 @@ def index(req_path):
     the "action" get parameter.
     
     Allowed actions are:
-    - create: create a file
-    - mkdir: create a directory
-    - upload: upload a file
-     - delete: delete a files or a drectories
+    - archive: download an archive of current directory
+    - create:  create a file
+    - delete:  delete a files or a drectories
+    - mkdir:   create a directory
+    - upload:  upload a file
     """
-    actions = ["mkdir", "create", "delete", "upload"]
+    actions = ["mkdir", "create", "delete", "upload", "archive"]
     
     if request.method == "GET":
-        # joining the base and the requested path
+        # Joining the base and the requested path.
         abs_path = Path(os.path.join(app.config["DIRECTORY"], req_path))
 
-        # return 404 if path doesn't exist
+        # Return 404 if path doesn't exist.
         if not abs_path.exists():
             return abort(404)
-        # check if path is a file and serve
+        # Check if path is a file and serve.
         if abs_path.is_file():
             return send_from_directory(app.config["DIRECTORY"], req_path)
-        # show directory contents
+        # Show directory contents.
         files = []
         for file_path in sorted(abs_path.iterdir()):
             str_path = file_path.name
@@ -67,24 +69,26 @@ def index(req_path):
                 str_path += "/"
             files.append(
                 (str_path, ctime(file_stats.st_mtime), file_stats.st_size))
+
         return render_template(
             "index.html", edit=app.config["EDIT"], files=files, uuid=uuid4())
 
     if request.method == "POST":
-        # get the action
+        # Get the action.
         action = request.args.get("action")
-        # check if action is valid
+        
+        # Check if action is valid.
         if action not in actions:
             flash("Invalid action")
             return redirect(request.url)
-        # execute action
+        # Execute action.
         if action in actions:
             func = globals()[action]
             return func(req_path, request)
 
 
 def make_file_path(path, file_name):
-    """Action that create and return secure Path object from requested one
+    """Action that create and return secure Path object from requested one.
     """
     secure_file_name = secure_filename(file_name)
     return Path(
@@ -92,7 +96,7 @@ def make_file_path(path, file_name):
 
 
 def create(path, request):
-    """Action that create file
+    """Action that create file.
     """
     if app.config["EDIT"]:
         if "name" not in request.form:
@@ -108,11 +112,11 @@ def create(path, request):
             else:
                 flash(f"File {request.form['name']} already exists", "yellow")
             
-        return redirect(request.url)
+        return redirect(request.path)
 
 
 def mkdir(path, request):
-    """Action that create directory 
+    """Action that create directory.
     """
     if app.config["EDIT"]:
         if "name" not in request.form:
@@ -124,52 +128,75 @@ def mkdir(path, request):
                 flash(f"Dirctory {path} created", "green")	
             else:
                 flash(f"Directory {path} already exists", "yellow")
-        return redirect(request.url)
+        return redirect(request.path)
+
+
+def archive(path, request):
+    """Action that create an archive of files and directories and download it.
+    """
+    print("dflkshdlf")
+    with TemporaryDirectory() as tmpdir_name:
+        archive_tmp = Path(tmpdir_name) / str(uuid4())
+        current_dir = make_file_path(path, "")
+
+        archive_path = Path(
+            make_archive(archive_tmp, "zip", current_dir))
+
+        if archive_path.exists():
+            flash(f"Archive {archive_path.name} created", "green")
+            file_sended = send_file(archive_path)
+            archive_path.unlink()
+            return file_sended
+        else:
+            flash("Archive not created", "red")
+    return redirect(request.path)
 
 
 def delete(path, request):
     """Action that delete file or directory if exists
     """
-    if app.config["EDIT"]:
-        files = list(request.form.values())
-        if not files:
-            flash("No files selected", "red")
-        for file_name in files:
-            file_path = make_file_path(path, file_name)
-            if file_path.exists():
-                if file_path.is_file():
-                    file_path.unlink()
-                if file_path.is_dir():
-                    rmtree(file_path)
-            else:
-                flash(f"File {file_name} does not exists", "yellow")
-        if files:
-            flash("Files deleted", "green")
-        return redirect(request.url)
+    files = list(request.form.values())
+    if not files:
+        flash("No files selected", "red")
+
+    # Create archive.
+    for file_name in files:
+        file_path = make_file_path(path, file_name)
+        if file_path.exists():
+            if file_path.is_file():
+                file_path.unlink()
+            if file_path.is_dir():
+                rmtree(file_path)
+        else:
+            flash(f"File {file_name} does not exists", "yellow")
+    if files:
+        flash("Files deleted", "green")
+    return redirect(request.path)
 
 
 def upload(path, request):
     """Action that upload file
     """
     if app.config["EDIT"]:
-        # check if the post request has the file part
-        if "file" not in request.files:
+        # Check if the post request has the file part.
+        if not request.files:
             flash("No file part provided", "red")
-            return redirect(request.url)
-        file = request.files["file"]
-        # if the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == "":
-            flash("No file selected", "red")
-            return redirect(request.url)
+            return redirect(request.path)
         
-        if file:
-            file_path = make_file_path(path, file.filename)
-            if file_path.exists():
-                flash(f"File {file.filename} will be erased", "yellow")
-            file.save(file_path)
-            flash(f"File {file.filename} uploaded", "green")
-            return redirect(request.url)
+        for file in request.files.getlist("file"):
+            # if the user does not select a file, the browser submits an
+            # empty file without a filename.
+            if file.filename == "":
+                flash("No file selected", "red")
+                return redirect(request.path)
+            
+            if file:
+                file_path = make_file_path(path, file.filename)
+                if file_path.exists():
+                    flash(f"File {file.filename} will be erased", "yellow")
+                file.save(file_path)
+                flash(f"File {file.filename} uploaded", "green")
+        return redirect(request.path)
 
 
 def get_args():
@@ -187,6 +214,7 @@ def get_args():
         "--debug", action="store_true", help="enable flask debug mode")
     
     network_parser = parser.add_argument_group("network")
+    
     network_parser.add_argument(
         "-b", "--bind", metavar="ADDR", type=str, default="0.0.0.0",
         help="specify alternate bind address [default: all interfaces]")
@@ -195,6 +223,7 @@ def get_args():
         help="specify alternate port [default: 8000]")
 
     security_parser = parser.add_argument_group("security")
+    
     security_parser.add_argument(
         "-a", "--auth", type=str, nargs=2, metavar=("LOGIN", "PASSWORD"),
         help="setup a basic authentication")
