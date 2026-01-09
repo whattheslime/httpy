@@ -3,6 +3,8 @@ import os
 import logging
 import secrets
 import string
+import sys
+import errno
 
 from argparse import ArgumentParser
 from hashlib import sha256
@@ -366,17 +368,30 @@ def run():
             ssl_context = (args.cert, args.key)
 
     # run the server
-    if args.dev or args.ssl:
-        if args.ssl and not args.dev:
-            print(" * WARNING: Waitress does not support SSL. Falling back to Flask development server.")
-        
-        app.run(
-            host=args.bind, port=args.port, debug=args.debug or args.dev,
-            ssl_context=ssl_context)
-    else:
-        from waitress import serve
-        print(f" * Serving httpy in production mode on http://{args.bind}:{args.port}")
-        serve(app, host=args.bind, port=args.port, url_scheme="https" if args.ssl else "http")
+    try:
+        if args.dev or args.ssl:
+            if args.ssl and not args.dev:
+                print(" * WARNING: Waitress does not support SSL. Falling back to Flask development server.")
+            
+            app.run(
+                host=args.bind, port=args.port, debug=args.debug or args.dev,
+                ssl_context=ssl_context)
+        else:
+            from waitress import serve
+            print(f" * Serving httpy in production mode on http://{args.bind}:{args.port}")
+            serve(app, host=args.bind, port=args.port, url_scheme="https" if args.ssl else "http")
+    except OSError as e:
+        if e.errno == errno.EADDRINUSE:
+            print(f"Error: Port {args.port} is already in use on {args.bind}.")
+            print("Please choose a different port with --port or stop the conflicting service.")
+        elif e.errno == errno.EACCES:
+            print(f"Error: Permission denied. You might need elevated privileges to bind to port {args.port}.")
+        else:
+            print(f"Error: Could not start server: {e.strerror}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: An unexpected error occurred during startup: {str(e)}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
