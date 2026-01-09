@@ -4,6 +4,12 @@ Simple yet powerful HTTP server to list and manipulate files, built with Flask a
 
 The objective of this project is to replace Python's default `http.server` with a more feature-rich, secure, and production-ready solution.
 
+![command](images/cmd.png)
+
+![server](images/srv.png)
+
+---
+
 ## ✨ Features
 
 - **Production-Ready**: Uses Waitress by default for robustness.
