@@ -29,6 +29,21 @@ def verify_password(username, password):
         sha256(password.encode()).hexdigest() == app.config["BASIC_AUTH"][1])
 
 
+def safe_join(base_dir, *paths):
+    """Safely join paths and ensure the result is within base_dir.
+    
+    Returns the resolved Path object or raises PermissionError if traversal is detected.
+    """
+    base_path = Path(base_dir).resolve()
+    # Use joinpath and then resolve to get the absolute path
+    resolved_path = base_path.joinpath(*paths).resolve()
+    
+    # Check if resolved_path starts with base_path
+    if not str(resolved_path).startswith(str(base_path)):
+        raise PermissionError("Path traversal detected")
+    return resolved_path
+
+
 @app.route("/", methods=["GET", "POST"], defaults={"req_path": ""})
 @app.route("/<path:req_path>", methods=["GET", "POST"])
 @auth.login_required
@@ -51,8 +66,11 @@ def index(req_path):
     actions = ["mkdir", "create", "delete", "upload", "archive"]
     
     if request.method == "GET":
-        # Joining the base and the requested path.
-        abs_path = Path(os.path.join(app.config["DIRECTORY"], req_path))
+        # Joining the base and the requested path safely.
+        try:
+            abs_path = safe_join(app.config["DIRECTORY"], req_path)
+        except (PermissionError, ValueError):
+            return abort(403)
 
         # Return 404 if path doesn't exist.
         if not abs_path.exists():
@@ -84,15 +102,17 @@ def index(req_path):
         # Execute action.
         if action in actions:
             func = globals()[action]
-            return func(req_path, request)
+            try:
+                return func(req_path, request)
+            except (PermissionError, ValueError):
+                abort(403)
 
 
 def make_file_path(path, file_name):
     """Action that create and return secure Path object from requested one.
     """
     secure_file_name = secure_filename(file_name)
-    return Path(
-        os.path.join(app.config["DIRECTORY"], path, secure_file_name))
+    return safe_join(app.config["DIRECTORY"], path, secure_file_name)
 
 
 def create(path, request):
@@ -134,7 +154,6 @@ def mkdir(path, request):
 def archive(path, request):
     """Action that create an archive of files and directories and download it.
     """
-    print("dflkshdlf")
     with TemporaryDirectory() as tmpdir_name:
         archive_tmp = Path(tmpdir_name) / str(uuid4())
         current_dir = make_file_path(path, "")
