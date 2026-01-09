@@ -109,6 +109,4 @@ To generate a self-signed certificate for local testing:
 openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365
 ```
 
----
 
-*Made with ❤️ for simple file sharing.*
