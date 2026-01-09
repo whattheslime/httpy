@@ -54,6 +54,31 @@ def human_readable_size(size, decimal_places=2):
     return f"{size:.{decimal_places}f} {unit}"
 
 
+def handle_fs_errors(func):
+    """Decorator to handle common filesystem errors and flash messages.
+    """
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except PermissionError:
+            flash("Permission denied", "red")
+        except FileNotFoundError:
+            flash("File or directory not found", "red")
+        except IsADirectoryError:
+            flash("Target is a directory, not a file", "red")
+        except OSError as e:
+            if e.errno == 28: # ENOSPC
+                flash("Disk is full", "red")
+            else:
+                flash(f"System error: {e.strerror}", "red")
+        except Exception as e:
+            flash(f"Unexpected error: {str(e)}", "red")
+        return redirect(request.path)
+    return wrapper
+
+
 @app.route("/", methods=["GET", "POST"], defaults={"req_path": ""})
 @app.route("/<path:req_path>", methods=["GET", "POST"])
 @auth.login_required
@@ -131,14 +156,15 @@ def make_file_path(path, file_name):
     return safe_join(app.config["DIRECTORY"], path, secure_file_name)
 
 
+@handle_fs_errors
 def create(path, request):
     """Action that create file.
     """
     if app.config["EDIT"]:
         if "name" not in request.form:
-            flash("No file name provided")
+            flash("No file name provided", "red")
         elif "content" not in request.form:
-            flash("No content provided")
+            flash("No content provided", "red")
         else:
             file_path = make_file_path(path, request.form["name"])
             if not os.path.exists(file_path):
@@ -151,6 +177,7 @@ def create(path, request):
         return redirect(request.path)
 
 
+@handle_fs_errors
 def mkdir(path, request):
     """Action that create directory.
     """
@@ -161,12 +188,13 @@ def mkdir(path, request):
             dir_path = make_file_path(path, request.form["name"])
             if not os.path.exists(dir_path):
                 os.mkdir(dir_path)
-                flash(f"Dirctory {path} created", "green")	
+                flash(f"Directory {request.form['name']} created", "green")	
             else:
-                flash(f"Directory {path} already exists", "yellow")
+                flash(f"Directory {request.form['name']} already exists", "yellow")
         return redirect(request.path)
 
 
+@handle_fs_errors
 def archive(path, request):
     """Action that create an archive of files and directories and download it.
     """
@@ -187,6 +215,7 @@ def archive(path, request):
     return redirect(request.path)
 
 
+@handle_fs_errors
 def delete(path, request):
     """Action that delete file or directory if exists
     """
@@ -194,7 +223,7 @@ def delete(path, request):
     if not files:
         flash("No files selected", "red")
 
-    # Create archive.
+    # Delete files.
     for file_name in files:
         file_path = make_file_path(path, file_name)
         if file_path.exists():
@@ -209,6 +238,7 @@ def delete(path, request):
     return redirect(request.path)
 
 
+@handle_fs_errors
 def upload(path, request):
     """Action that upload file
     """
