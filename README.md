@@ -6,17 +6,12 @@ The objective of this project is to replace Python's default `http.server` with 
 
 ## ✨ Features
 
-- **Production-Ready**: Uses [Waitress](https://docs.pylonsproject.org/projects/waitress/) as the default WSGI server for robustness.
-- **Modern Directory Listing**: Enhanced UI with human-readable file sizes and intuitive navigation.
-- **File Manipulation**: Creation, upload, download (including zipping), and deletion of files and directories (requires `--edit`).
-- **Security First**: 
-  - Robust **Path Traversal protection** using resolved path validation.
-  - Basic Authentication support.
-  - SSL encryption (HTTPS) ready.
-- **Detailed Logging**: Every action (create, upload, delete, etc.) is logged with timestamp, level, and user IP.
-- **Human-Readable Sizes**: File sizes automatically formatted (B, KB, MB, GB, TB).
-- **Graceful Error Handling**: Descriptive error messages (e.g., "Disk Full", "Permission Denied") instead of generic 500 errors.
-- **Developer Mode**: Easily switch to Flask's debug mode with the `--dev` flag.
+- **Production-Ready**: Uses Waitress by default for robustness.
+- **File Manipulation**: Create, upload, download (ZIP), and delete files/dirs.
+- **Security**: Path traversal protection, Basic Auth, and SSL support.
+- **Modern UI**: Human-readable file sizes and intuitive navigation.
+- **Logging**: Action tracking with user IP and timestamps.
+- **Developer Friendly**: Flask debug mode available via `--dev`.
 
 ---
 
