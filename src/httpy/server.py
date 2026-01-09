@@ -232,8 +232,8 @@ def get_args():
         "-e", "--edit", action="store_true",
         help="enable creation, deletion and upload of files and directories")
     parser.add_argument(
-        "--production", action="store_true",
-        help="run the server using waitress (production-ready WSGI server)")
+        "--dev", action="store_true",
+        help="run the server using flask development server with debug mode")
     parser.add_argument(
         "--debug", action="store_true", help="enable flask debug mode")
     
@@ -301,14 +301,14 @@ def run():
             ssl_context = (args.cert, args.key)
 
     # run the server
-    if args.production:
+    if args.dev:
+        app.run(
+            host=args.bind, port=args.port, debug=args.debug or args.dev,
+            ssl_context=ssl_context)
+    else:
         from waitress import serve
         print(f" * Serving httpy in production mode on http://{args.bind}:{args.port}")
         serve(app, host=args.bind, port=args.port, url_scheme="https" if args.ssl else "http")
-    else:
-        app.run(
-            host=args.bind, port=args.port, debug=args.debug,
-            ssl_context=ssl_context)
 
 
 if __name__ == "__main__":

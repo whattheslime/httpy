@@ -27,14 +27,10 @@ python3 -m pip install .
 httpy --ssl -e
 ```
 ```
- * Serving Flask app 'httpy'
- * Debug mode: off
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on all addresses (0.0.0.0)
- * Running on https://127.0.0.1:8000
-Press CTRL+C to quit
-
+ * Serving httpy in production mode on http://0.0.0.0:8000
 ```
+
+*Note: Production mode (waitress) is used by default. Use `--dev` for Flask development server.*
 
 2. Open in browser:
 
