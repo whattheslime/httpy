@@ -65,7 +65,7 @@ def index(req_path):
     """
     actions = ["mkdir", "create", "delete", "upload", "archive"]
     
-    if request.method == "GET":
+    if request.method in ["GET", "HEAD"]:
         # Joining the base and the requested path safely.
         try:
             abs_path = safe_join(app.config["DIRECTORY"], req_path)
@@ -91,7 +91,7 @@ def index(req_path):
         return render_template(
             "index.html", edit=app.config["EDIT"], files=files, uuid=uuid4())
 
-    if request.method == "POST":
+    elif request.method == "POST":
         # Get the action.
         action = request.args.get("action")
         
@@ -105,7 +105,9 @@ def index(req_path):
             try:
                 return func(req_path, request)
             except (PermissionError, ValueError):
-                abort(403)
+                return abort(403)
+    
+    return abort(405)
 
 
 def make_file_path(path, file_name):
@@ -230,6 +232,9 @@ def get_args():
         "-e", "--edit", action="store_true",
         help="enable creation, deletion and upload of files and directories")
     parser.add_argument(
+        "--production", action="store_true",
+        help="run the server using waitress (production-ready WSGI server)")
+    parser.add_argument(
         "--debug", action="store_true", help="enable flask debug mode")
     
     network_parser = parser.add_argument_group("network")
@@ -296,7 +301,15 @@ def run():
             ssl_context = (args.cert, args.key)
 
     # run the server
-    app.run(
-        host=args.bind, port=args.port, debug=args.debug,
-        ssl_context=ssl_context)
+    if args.production:
+        from waitress import serve
+        print(f" * Serving httpy in production mode on http://{args.bind}:{args.port}")
+        serve(app, host=args.bind, port=args.port, url_scheme="https" if args.ssl else "http")
+    else:
+        app.run(
+            host=args.bind, port=args.port, debug=args.debug,
+            ssl_context=ssl_context)
 
+
+if __name__ == "__main__":
+    run()
