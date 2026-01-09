@@ -366,7 +366,10 @@ def run():
             ssl_context = (args.cert, args.key)
 
     # run the server
-    if args.dev:
+    if args.dev or args.ssl:
+        if args.ssl and not args.dev:
+            print(" * WARNING: Waitress does not support SSL. Falling back to Flask development server.")
+        
         app.run(
             host=args.bind, port=args.port, debug=args.debug or args.dev,
             ssl_context=ssl_context)
