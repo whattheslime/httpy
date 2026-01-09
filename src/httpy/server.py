@@ -44,6 +44,16 @@ def safe_join(base_dir, *paths):
     return resolved_path
 
 
+def human_readable_size(size, decimal_places=2):
+    """Convert bytes to human readable format.
+    """
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size < 1024.0:
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f} {unit}"
+
+
 @app.route("/", methods=["GET", "POST"], defaults={"req_path": ""})
 @app.route("/<path:req_path>", methods=["GET", "POST"])
 @auth.login_required
@@ -85,8 +95,12 @@ def index(req_path):
             file_stats = file_path.stat()
             if file_path.is_dir():
                 str_path += "/"
+                size = "-"
+            else:
+                size = human_readable_size(file_stats.st_size)
+            
             files.append(
-                (str_path, ctime(file_stats.st_mtime), file_stats.st_size))
+                (str_path, ctime(file_stats.st_mtime), size))
 
         return render_template(
             "index.html", edit=app.config["EDIT"], files=files, uuid=uuid4())
