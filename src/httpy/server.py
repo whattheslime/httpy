@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import logging
 import secrets
 import string
 
@@ -40,6 +41,9 @@ def safe_join(base_dir, *paths):
     
     # Check if resolved_path starts with base_path
     if not str(resolved_path).startswith(str(base_path)):
+        logging.warning(
+            f"Path traversal attempt by {request.remote_addr}: "
+            f"tried to access {resolved_path}")
         raise PermissionError("Path traversal detected")
     return resolved_path
 
@@ -63,17 +67,23 @@ def handle_fs_errors(func):
         try:
             return func(*args, **kwargs)
         except PermissionError:
+            logging.error(f"Permission denied for {func.__name__} by {request.remote_addr}")
             flash("Permission denied", "red")
         except FileNotFoundError:
+            logging.error(f"File not found during {func.__name__} by {request.remote_addr}")
             flash("File or directory not found", "red")
         except IsADirectoryError:
+            logging.error(f"Directory error for {func.__name__} by {request.remote_addr}")
             flash("Target is a directory, not a file", "red")
         except OSError as e:
             if e.errno == 28: # ENOSPC
+                logging.error(f"Disk full error for {func.__name__} by {request.remote_addr}")
                 flash("Disk is full", "red")
             else:
+                logging.error(f"System error during {func.__name__}: {e.strerror}")
                 flash(f"System error: {e.strerror}", "red")
         except Exception as e:
+            logging.error(f"Unexpected error in {func.__name__}: {str(e)}")
             flash(f"Unexpected error: {str(e)}", "red")
         return redirect(request.path)
     return wrapper
@@ -170,6 +180,7 @@ def create(path, request):
             if not os.path.exists(file_path):
                 with open(file_path, "w") as file:
                     file.write(request.form["content"])
+                logging.info(f"File {request.form['name']} created by {request.remote_addr}")
                 flash(f"File {request.form['name']} created", "green")	
             else:
                 flash(f"File {request.form['name']} already exists", "yellow")
@@ -188,6 +199,7 @@ def mkdir(path, request):
             dir_path = make_file_path(path, request.form["name"])
             if not os.path.exists(dir_path):
                 os.mkdir(dir_path)
+                logging.info(f"Directory {request.form['name']} created by {request.remote_addr}")
                 flash(f"Directory {request.form['name']} created", "green")	
             else:
                 flash(f"Directory {request.form['name']} already exists", "yellow")
@@ -206,6 +218,7 @@ def archive(path, request):
             make_archive(archive_tmp, "zip", current_dir))
 
         if archive_path.exists():
+            logging.info(f"Archive {archive_path.name} created for {request.remote_addr}")
             flash(f"Archive {archive_path.name} created", "green")
             file_sended = send_file(archive_path)
             archive_path.unlink()
@@ -234,6 +247,7 @@ def delete(path, request):
         else:
             flash(f"File {file_name} does not exists", "yellow")
     if files:
+        logging.info(f"Files {files} deleted by {request.remote_addr}")
         flash("Files deleted", "green")
     return redirect(request.path)
 
@@ -260,6 +274,7 @@ def upload(path, request):
                 if file_path.exists():
                     flash(f"File {file.filename} will be erased", "yellow")
                 file.save(file_path)
+                logging.info(f"File {file.filename} uploaded by {request.remote_addr}")
                 flash(f"File {file.filename} uploaded", "green")
         return redirect(request.path)
 
@@ -310,6 +325,12 @@ def get_args():
 def run():
     """Main function
     """
+    # Setup logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S")
+
     # generate app secret
     app.secret_key = "".join(
         secrets.choice(string.printable) for _ in range(20))
