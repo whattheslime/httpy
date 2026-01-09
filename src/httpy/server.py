@@ -350,6 +350,9 @@ def run():
 
     # set working directory
     app.config["DIRECTORY"] = args.directory
+    if not os.path.exists(args.directory):
+        print(f" * WARNING: Directory '{args.directory}' does not exist.")
+    
     # enable files edition
     app.config["EDIT"] = args.edit
     
