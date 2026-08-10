@@ -10,6 +10,7 @@ from argparse import ArgumentParser
 from hashlib import sha256
 from pathlib import Path
 from shutil import rmtree, make_archive
+from threading import Timer
 from time import ctime
 from tempfile import TemporaryDirectory
 from uuid import uuid4
@@ -281,6 +282,20 @@ def upload(path, request):
         return redirect(request.path)
 
 
+def start_timeout(timeout):
+    """Schedule the server shutdown after the given delay in seconds.
+    """
+    def stop():
+        print(
+            f" * Timeout of {timeout} seconds reached, stopping server",
+            flush=True)
+        os._exit(0)
+
+    timer = Timer(timeout, stop)
+    timer.daemon = True
+    timer.start()
+
+
 def get_args():
     """Parse user arguments
     """
@@ -292,6 +307,9 @@ def get_args():
     parser.add_argument(
         "-e", "--edit", action="store_true",
         help="enable creation, deletion and upload of files and directories")
+    parser.add_argument(
+        "-t", "--timeout", metavar="SECONDS", type=int, default=0,
+        help="stop the server after SECONDS seconds [default: 0, run forever]")
     parser.add_argument(
         "--dev", action="store_true",
         help="run the server using flask development server with debug mode")
@@ -369,6 +387,11 @@ def run():
         # load SSL certificate and key from user arguments
         else:
             ssl_context = (args.cert, args.key)
+
+    # stop the server after the requested delay
+    if args.timeout > 0:
+        print(f" * Server will stop after {args.timeout} seconds")
+        start_timeout(args.timeout)
 
     # run the server
     try:

@@ -54,15 +54,16 @@ httpy --dev
 
 ### 2. Command Line Arguments
 
-| Argument | Short | Description |
-| :--- | :--- | :--- |
-| `--directory` | `-d` | Target directory to serve (default: current) |
-| `--edit` | `-e` | Enable file/directory manipulation |
-| `--dev` | | Use Flask development server with debug mode |
-| `--auth` | `-a` | Setup Basic Auth (`USER PASSWORD`) |
-| `--bind` | `-b` | Bind address (default: `0.0.0.0`) |
-| `--port` | `-p` | Port number (default: `8000`) |
-| `--ssl` | `-s` | Enable SSL encryption |
+| Argument             | Description 
+|:---------------------|:---
+| `--directory` / `-d` | Target directory to serve (default: current)
+| `--edit` / `-e`      | Enable file/directory manipulation
+| `--timeout` / `-t`   | Stop the server after N seconds (default: `0`, run forever)
+| `--dev`              | Use Flask development server with debug mode
+| `--auth` / `-a`      | Setup Basic Auth (`USER PASSWORD`)
+| `--bind` / `-b`      | Bind address (default: `0.0.0.0`)
+| `--port` / `-p`      | Port number (default: `8000`)
+| `--ssl` / `-s`       | Enable SSL encryption
 
 ---
 
